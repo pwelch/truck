@@ -34,7 +34,7 @@ var _ = math.Inf
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 type Request struct {
-	Content []byte `protobuf:"bytes,1,opt,name=content,proto3" json:"content,omitempty"`
+	Fetch bool `protobuf:"varint,1,opt,name=fetch" json:"fetch,omitempty"`
 }
 
 func (m *Request) Reset()                    { *m = Request{} }
@@ -42,15 +42,15 @@ func (m *Request) String() string            { return proto.CompactTextString(m)
 func (*Request) ProtoMessage()               {}
 func (*Request) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
-func (m *Request) GetContent() []byte {
+func (m *Request) GetFetch() bool {
 	if m != nil {
-		return m.Content
+		return m.Fetch
 	}
-	return nil
+	return false
 }
 
 type Response struct {
-	Success bool `protobuf:"varint,1,opt,name=success" json:"success,omitempty"`
+	Content []byte `protobuf:"bytes,1,opt,name=content,proto3" json:"content,omitempty"`
 }
 
 func (m *Response) Reset()                    { *m = Response{} }
@@ -58,11 +58,11 @@ func (m *Response) String() string            { return proto.CompactTextString(m
 func (*Response) ProtoMessage()               {}
 func (*Response) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
 
-func (m *Response) GetSuccess() bool {
+func (m *Response) GetContent() []byte {
 	if m != nil {
-		return m.Success
+		return m.Content
 	}
-	return false
+	return nil
 }
 
 func init() {
@@ -81,7 +81,7 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for File service
 
 type FileClient interface {
-	FileTransfer(ctx context.Context, opts ...grpc.CallOption) (File_FileTransferClient, error)
+	FileTransfer(ctx context.Context, in *Request, opts ...grpc.CallOption) (File_FileTransferClient, error)
 }
 
 type fileClient struct {
@@ -92,27 +92,28 @@ func NewFileClient(cc *grpc.ClientConn) FileClient {
 	return &fileClient{cc}
 }
 
-func (c *fileClient) FileTransfer(ctx context.Context, opts ...grpc.CallOption) (File_FileTransferClient, error) {
+func (c *fileClient) FileTransfer(ctx context.Context, in *Request, opts ...grpc.CallOption) (File_FileTransferClient, error) {
 	stream, err := grpc.NewClientStream(ctx, &_File_serviceDesc.Streams[0], c.cc, "/transfer.File/FileTransfer", opts...)
 	if err != nil {
 		return nil, err
 	}
 	x := &fileFileTransferClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
 	return x, nil
 }
 
 type File_FileTransferClient interface {
-	Send(*Request) error
 	Recv() (*Response, error)
 	grpc.ClientStream
 }
 
 type fileFileTransferClient struct {
 	grpc.ClientStream
-}
-
-func (x *fileFileTransferClient) Send(m *Request) error {
-	return x.ClientStream.SendMsg(m)
 }
 
 func (x *fileFileTransferClient) Recv() (*Response, error) {
@@ -126,7 +127,7 @@ func (x *fileFileTransferClient) Recv() (*Response, error) {
 // Server API for File service
 
 type FileServer interface {
-	FileTransfer(File_FileTransferServer) error
+	FileTransfer(*Request, File_FileTransferServer) error
 }
 
 func RegisterFileServer(s *grpc.Server, srv FileServer) {
@@ -134,12 +135,15 @@ func RegisterFileServer(s *grpc.Server, srv FileServer) {
 }
 
 func _File_FileTransfer_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(FileServer).FileTransfer(&fileFileTransferServer{stream})
+	m := new(Request)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(FileServer).FileTransfer(m, &fileFileTransferServer{stream})
 }
 
 type File_FileTransferServer interface {
 	Send(*Response) error
-	Recv() (*Request, error)
 	grpc.ServerStream
 }
 
@@ -151,14 +155,6 @@ func (x *fileFileTransferServer) Send(m *Response) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *fileFileTransferServer) Recv() (*Request, error) {
-	m := new(Request)
-	if err := x.ServerStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
 var _File_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "transfer.File",
 	HandlerType: (*FileServer)(nil),
@@ -168,7 +164,6 @@ var _File_serviceDesc = grpc.ServiceDesc{
 			StreamName:    "FileTransfer",
 			Handler:       _File_FileTransfer_Handler,
 			ServerStreams: true,
-			ClientStreams: true,
 		},
 	},
 	Metadata: "transfer.proto",
@@ -177,15 +172,15 @@ var _File_serviceDesc = grpc.ServiceDesc{
 func init() { proto.RegisterFile("transfer.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 151 bytes of a gzipped FileDescriptorProto
+	// 149 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x2b, 0x29, 0x4a, 0xcc,
-	0x2b, 0x4e, 0x4b, 0x2d, 0xd2, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2, 0x80, 0xf1, 0x95, 0x94,
-	0xb9, 0xd8, 0x83, 0x52, 0x0b, 0x4b, 0x53, 0x8b, 0x4b, 0x84, 0x24, 0xb8, 0xd8, 0x93, 0xf3, 0xf3,
-	0x4a, 0x52, 0xf3, 0x4a, 0x24, 0x18, 0x15, 0x18, 0x35, 0x78, 0x82, 0x60, 0x5c, 0x25, 0x15, 0x2e,
-	0x8e, 0xa0, 0xd4, 0xe2, 0x82, 0xfc, 0xbc, 0xe2, 0x54, 0x90, 0xaa, 0xe2, 0xd2, 0xe4, 0xe4, 0xd4,
-	0xe2, 0x62, 0xb0, 0x2a, 0x8e, 0x20, 0x18, 0xd7, 0xc8, 0x99, 0x8b, 0xc5, 0x2d, 0x33, 0x27, 0x55,
-	0xc8, 0x9a, 0x8b, 0x07, 0x44, 0x87, 0x40, 0xad, 0x10, 0x12, 0xd4, 0x83, 0xdb, 0x0e, 0xb5, 0x4a,
-	0x4a, 0x08, 0x59, 0x08, 0x62, 0xb0, 0x12, 0x83, 0x06, 0xa3, 0x01, 0xa3, 0x13, 0x57, 0x14, 0x07,
-	0xd8, 0x89, 0x49, 0xa5, 0x69, 0x49, 0x6c, 0x60, 0x96, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0x21,
-	0xd6, 0xea, 0x5a, 0xbe, 0x00, 0x00, 0x00,
+	0x2b, 0x4e, 0x4b, 0x2d, 0xd2, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2, 0x80, 0xf1, 0x95, 0xe4,
+	0xb9, 0xd8, 0x83, 0x52, 0x0b, 0x4b, 0x53, 0x8b, 0x4b, 0x84, 0x44, 0xb8, 0x58, 0xd3, 0x52, 0x4b,
+	0x92, 0x33, 0x24, 0x18, 0x15, 0x18, 0x35, 0x38, 0x82, 0x20, 0x1c, 0x25, 0x15, 0x2e, 0x8e, 0xa0,
+	0xd4, 0xe2, 0x82, 0xfc, 0xbc, 0xe2, 0x54, 0x21, 0x09, 0x2e, 0xf6, 0xe4, 0xfc, 0xbc, 0x92, 0xd4,
+	0xbc, 0x12, 0xb0, 0x1a, 0x9e, 0x20, 0x18, 0xd7, 0xc8, 0x91, 0x8b, 0xc5, 0x2d, 0x33, 0x27, 0x55,
+	0xc8, 0x92, 0x8b, 0x07, 0x44, 0x87, 0x40, 0x8d, 0x17, 0x12, 0xd4, 0x83, 0xdb, 0x0c, 0xb5, 0x46,
+	0x4a, 0x08, 0x59, 0x08, 0x62, 0xb0, 0x12, 0x83, 0x01, 0xa3, 0x13, 0x57, 0x14, 0x07, 0xd8, 0x71,
+	0x49, 0xa5, 0x69, 0x49, 0x6c, 0x60, 0x96, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0x72, 0xa5, 0x57,
+	0xe7, 0xb8, 0x00, 0x00, 0x00,
 }
