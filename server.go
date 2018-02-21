@@ -17,6 +17,7 @@ func (s *FileServer) FileTransfer(req *pb.Request, stream pb.File_FileTransferSe
 	fmt.Println("Entering FileTransfer")
 	stream.Send(&pb.Response{Content: []byte("Our Message")})
 
+	fmt.Println("Finished FileTransfer")
 	return nil
 }
 
