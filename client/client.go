@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"log"
+	"os"
 
 	pb "github.com/pwelch/truck/protobuf"
 	"golang.org/x/net/context"
@@ -28,7 +30,14 @@ func main() {
 		fmt.Println("error")
 	}
 
-	var content []byte
+	outFile, err := os.Create("output.txt")
+	if err != nil {
+		fmt.Println("error creating file")
+	}
+	defer outFile.Close()
+
+	w := bufio.NewWriter(outFile)
+
 	for {
 		resp, err := stream.Recv()
 		if err == io.EOF {
@@ -37,8 +46,7 @@ func main() {
 		if err != nil {
 			fmt.Println("fail")
 		}
-		content = resp.GetContent()
+		w.Write(resp.GetContent())
+		w.Flush()
 	}
-
-	fmt.Printf("%s \n", content)
 }

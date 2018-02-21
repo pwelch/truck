@@ -15,7 +15,12 @@ type FileServer struct{}
 // FileTransfer transfer things
 func (s *FileServer) FileTransfer(req *pb.Request, stream pb.File_FileTransferServer) error {
 	fmt.Println("Entering FileTransfer")
-	stream.Send(&pb.Response{Content: []byte("Our Message")})
+
+	start := []byte("start")
+	end := []byte("end")
+
+	stream.Send(&pb.Response{Content: start})
+	stream.Send(&pb.Response{Content: end})
 
 	fmt.Println("Finished FileTransfer")
 	return nil
