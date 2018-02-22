@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/sha256"
 	"flag"
 	"fmt"
 	"io"
@@ -11,7 +12,7 @@ import (
 	grpc "google.golang.org/grpc"
 )
 
-// bufferSize for file transfer, default 0.25MB
+// bufferSize for file transfer, default 0.25 MB
 const bufferSize = 262144
 
 // FileServer type
@@ -33,7 +34,7 @@ func (s *FileServer) FileTransfer(req *pb.Request, stream pb.File_FileTransferSe
 
 	// Read the file until we hit EOF
 	for {
-		// Read read up to len(buffer) bytes from the file
+		// Read up to len(buffer) bytes from the file each pass
 		bytesRead, err := file.Read(buffer)
 		if err != nil {
 			if err != io.EOF {
@@ -48,7 +49,21 @@ func (s *FileServer) FileTransfer(req *pb.Request, stream pb.File_FileTransferSe
 		stream.Send(&pb.Response{Content: buffer[:bytesRead]})
 	}
 
+	b2 := make([]byte, bufferSize)
+	f2, err := os.Open("./fixtures/time_machine.txt")
+	if err != nil {
+		fmt.Println("err reading file")
+	}
+	defer f2.Close()
+	h := sha256.New()
+	if _, err := io.CopyBuffer(h, f2, b2); err != nil {
+		fmt.Println("error creating sha")
+	}
+
+	fmt.Printf("\n %x \n", h.Sum(nil))
+
 	fmt.Println("Finished FileTransfer")
+
 	return nil
 }
 
