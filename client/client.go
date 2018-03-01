@@ -47,6 +47,9 @@ func main() {
 			fmt.Println("fail")
 		}
 		w.Write(resp.GetContent())
-		w.Flush()
+		break
 	}
+
+	// Ensure everything is flushed to stable storage
+	w.Flush()
 }
